@@ -1,12 +1,6 @@
 const sectors = [
-  { color: "#FFBC03", text: "#333333", label: "Sweets" },
-  { color: "#FF5A10", text: "#333333", label: "Prize draw" },
-  { color: "#FFBC03", text: "#333333", label: "Sweets" },
-  { color: "#FF5A10", text: "#333333", label: "Prize draw" },
-  { color: "#FFBC03", text: "#333333", label: "Sweets + Prize draw" },
-  { color: "#FF5A10", text: "#333333", label: "You lose" },
-  { color: "#FFBC03", text: "#333333", label: "Prize draw" },
-  { color: "#FF5A10", text: "#333333", label: "Sweets" },
+  { color: "#FFD600", text: "#000000", label: "Light" },
+  { color: "#212121", text: "#ffffff", label: "Dark" },
 ];
 
 const events = {
@@ -34,11 +28,24 @@ const PI = Math.PI;
 const TAU = 2 * PI;
 const arc = TAU / sectors.length;
 
-const friction = 0.991; // 0.995=soft, 0.99=mid, 0.98=hard
-let angVel = 0; // Angular velocity
-let ang = 0; // Angle in radians
+const friction = 0.991;
+let angVel = 0;
+let ang = 0;
 
 let spinButtonClicked = false;
+let forcedIndex = null;
+
+// 🎮 CONTROL POR TECLA
+document.addEventListener("keydown", (e) => {
+  if (e.key.toLowerCase() === "l") {
+    forcedIndex = 0;
+    console.log("⚠ Resultado FORZADO: Light (Modo demo)");
+  }
+  if (e.key.toLowerCase() === "d") {
+    forcedIndex = 1;
+    console.log("⚠ Resultado FORZADO: Dark (Modo demo)");
+  }
+});
 
 const getIndex = () => Math.floor(tot - (ang / TAU) * tot) % tot;
 
@@ -46,7 +53,6 @@ function drawSector(sector, i) {
   const ang = arc * i;
   ctx.save();
 
-  // COLOR
   ctx.beginPath();
   ctx.fillStyle = sector.color;
   ctx.moveTo(rad, rad);
@@ -54,14 +60,12 @@ function drawSector(sector, i) {
   ctx.lineTo(rad, rad);
   ctx.fill();
 
-  // TEXT
   ctx.translate(rad, rad);
   ctx.rotate(ang + arc / 2);
   ctx.textAlign = "right";
   ctx.fillStyle = sector.text;
-  ctx.font = "bold 30px 'Lato', sans-serif";
+  ctx.font = "bold 30px sans-serif";
   ctx.fillText(sector.label, rad - 10, 10);
-  //
 
   ctx.restore();
 }
@@ -76,18 +80,17 @@ function rotate() {
 }
 
 function frame() {
-  // Fire an event after the wheel has stopped spinning
   if (!angVel && spinButtonClicked) {
     const finalSector = sectors[getIndex()];
     events.fire("spinEnd", finalSector);
-    spinButtonClicked = false; // reset the flag
+    spinButtonClicked = false;
     return;
   }
 
-  angVel *= friction; // Decrement velocity by friction
-  if (angVel < 0.002) angVel = 0; // Bring to stop
-  ang += angVel; // Update angle
-  ang %= TAU; // Normalize angle
+  angVel *= friction;
+  if (angVel < 0.002) angVel = 0;
+  ang += angVel;
+  ang %= TAU;
   rotate();
 }
 
@@ -98,10 +101,21 @@ function engine() {
 
 function init() {
   sectors.forEach(drawSector);
-  rotate(); // Initial rotation
-  engine(); // Start engine
+  rotate();
+  engine();
+
   spinEl.addEventListener("click", () => {
-    if (!angVel) angVel = rand(0.25, 0.45);
+    if (!angVel) {
+      if (forcedIndex !== null) {
+        const targetAngle = TAU - (forcedIndex * arc + arc / 2);
+        ang = targetAngle;
+        angVel = 0.35;
+        console.log("⚠ MODO DEMO — Resultado no aleatorio");
+        forcedIndex = null;
+      } else {
+        angVel = rand(0.25, 0.45);
+      }
+    }
     spinButtonClicked = true;
   });
 }
@@ -109,5 +123,5 @@ function init() {
 init();
 
 events.addListener("spinEnd", (sector) => {
-  console.log(`Woop! You won ${sector.label}`);
+  console.log(`Resultado final: ${sector.label}`);
 });
