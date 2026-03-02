@@ -107,9 +107,20 @@ function init() {
   spinEl.addEventListener("click", () => {
     if (!angVel) {
       if (forcedIndex !== null) {
-        const targetAngle = TAU - (forcedIndex * arc + arc / 2);
-        ang = targetAngle;
-        angVel = 0.35;
+        // 🎯 Ángulo base del sector
+const baseAngle = forcedIndex * arc;
+
+// 🎲 Offset aleatorio dentro del sector (sin salirse)
+const randomOffset = Math.random() * (arc * 0.8) + (arc * 0.1);
+
+// 🎯 Ángulo final natural
+const targetAngle = TAU - (baseAngle + randomOffset);
+
+// Le agregamos vueltas extra para que no se vea directo
+const extraSpins = TAU * (3 + Math.floor(Math.random() * 3));
+
+ang = targetAngle + extraSpins;
+angVel = 0.35;
         console.log("⚠ MODO DEMO — Resultado no aleatorio");
         forcedIndex = null;
       } else {
