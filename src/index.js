@@ -153,7 +153,7 @@ spinEl.addEventListener("click", () => {
   }
 
   const finalAngle =
-    TAU - (resultIndex * arc + arc / 2);
+  (TAU - resultIndex * arc - arc / 2);
 
   const extraSpins =
     TAU * (4 + Math.floor(Math.random() * 3));
