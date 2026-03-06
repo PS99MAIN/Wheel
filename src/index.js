@@ -88,10 +88,31 @@ function frame() {
   }
 
   angVel *= friction;
-  if (angVel < 0.002) angVel = 0;
-  ang += angVel;
-  ang %= TAU;
-  rotate();
+
+// cuando la rueda casi se detiene
+if (angVel < 0.002) {
+
+  // si hay resultado forzado
+  if (forcedIndex !== null) {
+
+    const baseAngle = forcedIndex * arc;
+
+    // pequeño rango aleatorio dentro del sector (para estética)
+    const randomOffset = arc * 0.25 + Math.random() * arc * 0.5;
+
+    const finalAngle = TAU - (baseAngle + randomOffset);
+
+    ang = finalAngle;
+
+    forcedIndex = null;
+  }
+
+  angVel = 0;
+}
+
+ang += angVel;
+ang %= TAU;
+rotate();
 }
 
 function engine() {
