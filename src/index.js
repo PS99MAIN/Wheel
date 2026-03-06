@@ -19,9 +19,8 @@ let angVel = 0;
 
 const friction = 0.991;
 
-// modo toggle
-let forcedMode = null; 
-// "light" o "dark"
+let forcedMode = null; // "light" o "dark"
+let targetAngle = null;
 
 document.addEventListener("keydown", (e) => {
 
@@ -86,20 +85,9 @@ function frame() {
 
   if (angVel < 0.002) {
 
-    if (forcedMode !== null) {
-
-      let forcedIndex =
-        forcedMode === "light" ? 0 : 1;
-
-      const baseAngle = forcedIndex * arc;
-
-      const randomOffset =
-        arc * 0.2 + Math.random() * arc * 0.6;
-
-      const finalAngle =
-        TAU - (baseAngle + randomOffset);
-
-      ang = finalAngle;
+    if (targetAngle !== null) {
+      ang = targetAngle;
+      targetAngle = null;
     }
 
     angVel = 0;
@@ -112,7 +100,6 @@ function frame() {
 }
 
 function engine() {
-
   frame();
   requestAnimationFrame(engine);
 }
@@ -126,6 +113,26 @@ function init() {
   spinEl.addEventListener("click", () => {
 
     if (!angVel) {
+
+      if (forcedMode !== null) {
+
+        const forcedIndex =
+          forcedMode === "light" ? 0 : 1;
+
+        const baseAngle = forcedIndex * arc;
+
+        const randomOffset =
+          arc * 0.2 + Math.random() * arc * 0.6;
+
+        const finalAngle =
+          TAU - (baseAngle + randomOffset);
+
+        const extraSpins =
+          TAU * (4 + Math.floor(Math.random() * 3));
+
+        targetAngle = finalAngle + extraSpins;
+
+      }
 
       angVel = rand(0.25, 0.45);
 
