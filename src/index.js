@@ -175,7 +175,7 @@ spinEl.addEventListener("click", () => {
     TAU * (4 + Math.floor(Math.random() * 3));
 
   const target =
-    extraSpins + (TAU - sectorCenter);
+    extraSpins + (TAU - sectorCenter) + arc / 2;
 
   spinTo(target);
 
