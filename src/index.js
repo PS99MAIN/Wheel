@@ -1,133 +1,149 @@
 const sectors = [
   { color: "#FFD600", text: "#000000", label: "Light" },
-  { color: "#212121", text: "#ffffff", label: "Dark" },
+  { color: "#212121", text: "#ffffff", label: "Dark" }
 ];
 
 const spinEl = document.querySelector("#spin");
-const ctx = document.querySelector("#wheel").getContext("2d");
-
-const dia = ctx.canvas.width;
-const rad = dia / 2;
+const wheel = document.querySelector("#wheel");
+const ctx = wheel.getContext("2d");
 
 const PI = Math.PI;
-const TAU = 2 * PI;
+const TAU = PI * 2;
 
-const tot = sectors.length;
-const arc = TAU / tot;
+const size = wheel.width;
+const radius = size / 2;
 
-let ang = 0;
+const total = sectors.length;
+const arc = TAU / total;
+
+let angle = 0;
 let spinning = false;
 
-let targetAngle = 0;
-let nextResult = null;
+let forcedResult = null; // "light" | "dark" | null
 
 // teclas
 document.addEventListener("keydown", (e) => {
 
   if (e.key.toLowerCase() === "l") {
-    nextResult = "light";
+    forcedResult = "light";
     console.log("Siguiente giro: LIGHT");
   }
 
   if (e.key.toLowerCase() === "d") {
-    nextResult = "dark";
+    forcedResult = "dark";
     console.log("Siguiente giro: DARK");
   }
 
 });
 
-const getIndex = () =>
-  Math.floor(tot - (ang / TAU) * tot) % tot;
+function drawWheel() {
 
-function drawSector(sector, i) {
+  sectors.forEach((sector, i) => {
 
-  const ang = arc * i;
+    const ang = arc * i;
 
-  ctx.save();
+    ctx.beginPath();
+    ctx.fillStyle = sector.color;
 
-  ctx.beginPath();
-  ctx.fillStyle = sector.color;
-  ctx.moveTo(rad, rad);
-  ctx.arc(rad, rad, rad, ang, ang + arc);
-  ctx.lineTo(rad, rad);
-  ctx.fill();
+    ctx.moveTo(radius, radius);
+    ctx.arc(radius, radius, radius, ang, ang + arc);
+    ctx.lineTo(radius, radius);
+    ctx.fill();
 
-  ctx.translate(rad, rad);
-  ctx.rotate(ang + arc / 2);
+    ctx.save();
 
-  ctx.textAlign = "right";
-  ctx.fillStyle = sector.text;
-  ctx.font = "bold 30px sans-serif";
-  ctx.fillText(sector.label, rad - 10, 10);
+    ctx.translate(radius, radius);
+    ctx.rotate(ang + arc / 2);
 
-  ctx.restore();
-}
+    ctx.textAlign = "right";
+    ctx.fillStyle = sector.text;
+    ctx.font = "bold 32px sans-serif";
 
-function rotate() {
+    ctx.fillText(sector.label, radius - 15, 10);
 
-  const sector = sectors[getIndex()];
-
-  ctx.canvas.style.transform =
-    `rotate(${ang - PI / 2}rad)`;
-
-  spinEl.textContent =
-    spinning ? sector.label : "SPIN";
-
-  spinEl.style.background = sector.color;
-  spinEl.style.color = sector.text;
-}
-
-function frame() {
-
-  if (spinning) {
-
-    const diff = targetAngle - ang;
-
-    if (Math.abs(diff) < 0.002) {
-      ang = targetAngle;
-      spinning = false;
-    } else {
-      ang += diff * 0.08;
-    }
-
-  }
-
-  rotate();
-  requestAnimationFrame(frame);
-}
-
-function init() {
-
-  sectors.forEach(drawSector);
-  rotate();
-  frame();
-
-  spinEl.addEventListener("click", () => {
-
-    if (!spinning) {
-
-      let resultIndex;
-
-      if (nextResult === "light") resultIndex = 0;
-      else if (nextResult === "dark") resultIndex = 1;
-      else resultIndex = Math.floor(Math.random() * sectors.length);
-
-      const finalAngle =
-        TAU - (resultIndex * arc + arc / 2);
-
-      const extraSpins =
-        TAU * (4 + Math.floor(Math.random() * 3));
-
-      targetAngle = finalAngle + extraSpins;
-
-      spinning = true;
-
-      nextResult = null;
-
-    }
+    ctx.restore();
 
   });
 
 }
 
-init();
+function rotateWheel() {
+
+  wheel.style.transform =
+    `rotate(${angle - PI / 2}rad)`;
+
+}
+
+function spinTo(target) {
+
+  spinning = true;
+
+  const start = angle;
+  const duration = 3000;
+
+  const startTime = performance.now();
+
+  function animate(time) {
+
+    const progress =
+      (time - startTime) / duration;
+
+    if (progress >= 1) {
+
+      angle = target;
+      spinning = false;
+      rotateWheel();
+      return;
+
+    }
+
+    const ease =
+      1 - Math.pow(1 - progress, 3);
+
+    angle =
+      start + (target - start) * ease;
+
+    rotateWheel();
+
+    requestAnimationFrame(animate);
+
+  }
+
+  requestAnimationFrame(animate);
+
+}
+
+spinEl.addEventListener("click", () => {
+
+  if (spinning) return;
+
+  let resultIndex;
+
+  if (forcedResult === "light") {
+    resultIndex = 0;
+  }
+  else if (forcedResult === "dark") {
+    resultIndex = 1;
+  }
+  else {
+    resultIndex =
+      Math.floor(Math.random() * sectors.length);
+  }
+
+  const finalAngle =
+    TAU - (resultIndex * arc + arc / 2);
+
+  const extraSpins =
+    TAU * (5 + Math.floor(Math.random() * 3));
+
+  const target =
+    angle + extraSpins + finalAngle;
+
+  spinTo(target);
+
+  forcedResult = null;
+
+});
+
+drawWheel();
+rotateWheel();
