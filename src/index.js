@@ -21,19 +21,20 @@ const friction = 0.991;
 let angVel = 0;
 let ang = 0;
 
-let forcedIndex = null;
+let nextResult = null; // light / dark / null
+let targetAngle = null;
 
-// teclas para forzar resultado
+// teclas
 document.addEventListener("keydown", (e) => {
 
   if (e.key.toLowerCase() === "l") {
-    forcedIndex = 0;
-    console.log("Resultado forzado: LIGHT");
+    nextResult = "light";
+    console.log("Siguiente giro forzado: LIGHT");
   }
 
   if (e.key.toLowerCase() === "d") {
-    forcedIndex = 1;
-    console.log("Resultado forzado: DARK");
+    nextResult = "dark";
+    console.log("Siguiente giro forzado: DARK");
   }
 
 });
@@ -83,17 +84,11 @@ function frame() {
 
   angVel *= friction;
 
-  // cuando la rueda se está deteniendo
   if (angVel < 0.002) {
 
-    if (forcedIndex !== null) {
-
-      const finalAngle =
-        TAU - (forcedIndex * arc + arc / 2);
-
-      ang = finalAngle;
-
-      forcedIndex = null;
+    if (targetAngle !== null) {
+      ang = targetAngle;
+      targetAngle = null;
     }
 
     angVel = 0;
@@ -121,7 +116,24 @@ function init() {
 
     if (!angVel) {
 
+      let resultIndex;
+
+      if (nextResult === "light") resultIndex = 0;
+      else if (nextResult === "dark") resultIndex = 1;
+      else resultIndex = Math.floor(Math.random() * sectors.length);
+
+      const finalAngle =
+        TAU - (resultIndex * arc + arc / 2);
+
+      const extraSpins =
+        TAU * (4 + Math.floor(Math.random() * 3));
+
+      targetAngle = finalAngle + extraSpins;
+
       angVel = rand(0.25, 0.45);
+
+      // vuelve a random
+      nextResult = null;
 
     }
 
