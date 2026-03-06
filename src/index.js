@@ -21,7 +21,8 @@ let spinning = false;
 
 let forcedResult = null;
 
-// DETECTAR TECLAS
+
+// TECLAS
 document.addEventListener("keydown", (e) => {
 
   const key = e.key.toLowerCase();
@@ -38,6 +39,8 @@ document.addEventListener("keydown", (e) => {
 
 });
 
+
+// DIBUJAR RULETA
 function drawWheel() {
 
   sectors.forEach((sector, i) => {
@@ -69,66 +72,38 @@ function drawWheel() {
 
 }
 
-function getIndex() {
 
-  const normalized = ((angle % TAU) + TAU) % TAU;
-
-  return Math.floor(total - normalized / TAU * total) % total;
-
-}
-
-function updateUI() {
-
-  const sector = sectors[getIndex()];
-
-  spinEl.textContent =
-    spinning ? sector.label : "SPIN";
-
-  spinEl.style.background = sector.color;
-  spinEl.style.color = sector.text;
-
-}
-
+// ROTAR RULETA
 function rotateWheel() {
 
-  wheel.style.transform =
-    `rotate(${angle - PI / 2}rad)`;
-
-  updateUI();
+  wheel.style.transform = `rotate(${angle}rad)`;
 
 }
 
-function spinTo(target) {
+
+// ANIMACIÓN DE GIRO
+function spinTo(targetAngle) {
 
   spinning = true;
 
   const start = angle;
   const duration = 3000;
-
   const startTime = performance.now();
 
   function animate(time) {
 
-    const progress =
-      Math.min((time - startTime) / duration, 1);
+    const progress = Math.min((time - startTime) / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
 
-    const ease =
-      1 - Math.pow(1 - progress, 3);
-
-    angle =
-      start + (target - start) * ease;
+    angle = start + (targetAngle - start) * ease;
 
     rotateWheel();
 
     if (progress < 1) {
       requestAnimationFrame(animate);
     } else {
-
-      angle = target % TAU;
+      angle = targetAngle % TAU;
       spinning = false;
-
-      rotateWheel();
-
     }
 
   }
@@ -137,35 +112,38 @@ function spinTo(target) {
 
 }
 
+
+// CLICK SPIN
 spinEl.addEventListener("click", () => {
 
   if (spinning) return;
 
-  let resultIndex;
+  let index;
 
   if (forcedResult) {
-    resultIndex = sectors.findIndex(
+
+    index = sectors.findIndex(
       s => s.label === forcedResult
     );
+
   } else {
-    resultIndex =
-      Math.floor(Math.random() * sectors.length);
+
+    index = Math.floor(Math.random() * sectors.length);
+
   }
 
-  const finalAngle =
-  (TAU - resultIndex * arc - arc / 2);
+  const sectorCenter = index * arc + arc / 2;
 
-  const extraSpins =
-    TAU * (4 + Math.floor(Math.random() * 3));
+  const spins = TAU * (4 + Math.floor(Math.random() * 3));
 
-  const target =
-    angle + extraSpins + finalAngle;
+  const targetAngle = spins + (TAU - sectorCenter);
 
-  spinTo(target);
+  spinTo(targetAngle);
 
   forcedResult = null;
 
 });
+
 
 drawWheel();
 rotateWheel();
