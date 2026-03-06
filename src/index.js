@@ -19,7 +19,7 @@ const arc = TAU / total;
 let angle = 0;
 let spinning = false;
 
-let forcedResult = null; // "light" | "dark" | null
+let forcedResult = null;
 
 // teclas
 document.addEventListener("keydown", (e) => {
@@ -67,10 +67,33 @@ function drawWheel() {
 
 }
 
+function getIndex() {
+
+  const normalized =
+    ((angle % TAU) + TAU) % TAU;
+
+  return Math.floor(total - normalized / TAU * total) % total;
+
+}
+
+function updateUI() {
+
+  const sector = sectors[getIndex()];
+
+  spinEl.textContent =
+    spinning ? sector.label : "SPIN";
+
+  spinEl.style.background = sector.color;
+  spinEl.style.color = sector.text;
+
+}
+
 function rotateWheel() {
 
   wheel.style.transform =
     `rotate(${angle - PI / 2}rad)`;
+
+  updateUI();
 
 }
 
@@ -86,16 +109,7 @@ function spinTo(target) {
   function animate(time) {
 
     const progress =
-      (time - startTime) / duration;
-
-    if (progress >= 1) {
-
-      angle = target;
-      spinning = false;
-      rotateWheel();
-      return;
-
-    }
+      Math.min((time - startTime) / duration, 1);
 
     const ease =
       1 - Math.pow(1 - progress, 3);
@@ -105,7 +119,13 @@ function spinTo(target) {
 
     rotateWheel();
 
-    requestAnimationFrame(animate);
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      angle = target % TAU;
+      spinning = false;
+      rotateWheel();
+    }
 
   }
 
@@ -119,22 +139,15 @@ spinEl.addEventListener("click", () => {
 
   let resultIndex;
 
-  if (forcedResult === "light") {
-    resultIndex = 0;
-  }
-  else if (forcedResult === "dark") {
-    resultIndex = 1;
-  }
-  else {
-    resultIndex =
-      Math.floor(Math.random() * sectors.length);
-  }
+  if (forcedResult === "light") resultIndex = 0;
+  else if (forcedResult === "dark") resultIndex = 1;
+  else resultIndex = Math.floor(Math.random() * sectors.length);
 
   const finalAngle =
     TAU - (resultIndex * arc + arc / 2);
 
   const extraSpins =
-    TAU * (5 + Math.floor(Math.random() * 3));
+    TAU * (4 + Math.floor(Math.random() * 3));
 
   const target =
     angle + extraSpins + finalAngle;
