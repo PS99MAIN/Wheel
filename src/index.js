@@ -18,11 +18,10 @@ const arc = TAU / total;
 
 let angle = 0;
 let spinning = false;
-
 let forcedResult = null;
 
 
-// TECLAS
+// DETECTAR TECLAS
 document.addEventListener("keydown", (e) => {
 
   const key = e.key.toLowerCase();
@@ -73,16 +72,43 @@ function drawWheel() {
 }
 
 
-// ROTAR RULETA
-function rotateWheel() {
+// OBTENER SECTOR ACTUAL
+function getIndex() {
 
-  wheel.style.transform = `rotate(${angle}rad)`;
+  const normalized = ((angle % TAU) + TAU) % TAU;
+
+  return Math.floor(total - normalized / TAU * total) % total;
 
 }
 
 
-// ANIMACIÓN DE GIRO
-function spinTo(targetAngle) {
+// ACTUALIZAR UI
+function updateUI() {
+
+  const sector = sectors[getIndex()];
+
+  spinEl.textContent =
+    spinning ? sector.label : "SPIN";
+
+  spinEl.style.background = sector.color;
+  spinEl.style.color = sector.text;
+
+}
+
+
+// ROTAR RULETA
+function rotateWheel() {
+
+  wheel.style.transform =
+    `rotate(${angle}rad)`;
+
+  updateUI();
+
+}
+
+
+// ANIMACIÓN
+function spinTo(target) {
 
   spinning = true;
 
@@ -92,18 +118,26 @@ function spinTo(targetAngle) {
 
   function animate(time) {
 
-    const progress = Math.min((time - startTime) / duration, 1);
-    const ease = 1 - Math.pow(1 - progress, 3);
+    const progress =
+      Math.min((time - startTime) / duration, 1);
 
-    angle = start + (targetAngle - start) * ease;
+    const ease =
+      1 - Math.pow(1 - progress, 3);
+
+    angle =
+      start + (target - start) * ease;
 
     rotateWheel();
 
     if (progress < 1) {
       requestAnimationFrame(animate);
     } else {
-      angle = targetAngle % TAU;
+
+      angle = target % TAU;
       spinning = false;
+
+      rotateWheel();
+
     }
 
   }
@@ -118,27 +152,32 @@ spinEl.addEventListener("click", () => {
 
   if (spinning) return;
 
-  let index;
+  let resultIndex;
 
   if (forcedResult) {
 
-    index = sectors.findIndex(
-      s => s.label === forcedResult
-    );
+    resultIndex =
+      sectors.findIndex(
+        s => s.label === forcedResult
+      );
 
   } else {
 
-    index = Math.floor(Math.random() * sectors.length);
+    resultIndex =
+      Math.floor(Math.random() * sectors.length);
 
   }
 
-  const sectorCenter = index * arc + arc / 2;
+  const sectorCenter =
+    resultIndex * arc + arc / 2;
 
-  const spins = TAU * (4 + Math.floor(Math.random() * 3));
+  const extraSpins =
+    TAU * (4 + Math.floor(Math.random() * 3));
 
-  const targetAngle = spins + (TAU - sectorCenter);
+  const target =
+    extraSpins + (TAU - sectorCenter);
 
-  spinTo(targetAngle);
+  spinTo(target);
 
   forcedResult = null;
 
