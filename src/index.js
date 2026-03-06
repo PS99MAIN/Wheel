@@ -21,17 +21,19 @@ let spinning = false;
 
 let forcedResult = null;
 
-// teclas
+// DETECTAR TECLAS
 document.addEventListener("keydown", (e) => {
 
-  if (e.key.toLowerCase() === "l") {
-    forcedResult = "light";
-    console.log("Siguiente giro: LIGHT");
+  const key = e.key.toLowerCase();
+
+  if (key === "l") {
+    forcedResult = "Light";
+    console.log('TECLA PRESIONADA: "L" RESULTADO = LIGHT');
   }
 
-  if (e.key.toLowerCase() === "d") {
-    forcedResult = "dark";
-    console.log("Siguiente giro: DARK");
+  if (key === "d") {
+    forcedResult = "Dark";
+    console.log('TECLA PRESIONADA: "D" RESULTADO = DARK');
   }
 
 });
@@ -69,8 +71,7 @@ function drawWheel() {
 
 function getIndex() {
 
-  const normalized =
-    ((angle % TAU) + TAU) % TAU;
+  const normalized = ((angle % TAU) + TAU) % TAU;
 
   return Math.floor(total - normalized / TAU * total) % total;
 
@@ -122,9 +123,12 @@ function spinTo(target) {
     if (progress < 1) {
       requestAnimationFrame(animate);
     } else {
+
       angle = target % TAU;
       spinning = false;
+
       rotateWheel();
+
     }
 
   }
@@ -139,9 +143,14 @@ spinEl.addEventListener("click", () => {
 
   let resultIndex;
 
-  if (forcedResult === "light") resultIndex = 0;
-  else if (forcedResult === "dark") resultIndex = 1;
-  else resultIndex = Math.floor(Math.random() * sectors.length);
+  if (forcedResult) {
+    resultIndex = sectors.findIndex(
+      s => s.label === forcedResult
+    );
+  } else {
+    resultIndex =
+      Math.floor(Math.random() * sectors.length);
+  }
 
   const finalAngle =
     TAU - (resultIndex * arc + arc / 2);
