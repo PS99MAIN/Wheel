@@ -3,9 +3,6 @@ const sectors = [
   { color: "#212121", text: "#ffffff", label: "Dark" },
 ];
 
-const rand = (m, M) => Math.random() * (M - m) + m;
-
-const tot = sectors.length;
 const spinEl = document.querySelector("#spin");
 const ctx = document.querySelector("#wheel").getContext("2d");
 
@@ -14,27 +11,27 @@ const rad = dia / 2;
 
 const PI = Math.PI;
 const TAU = 2 * PI;
+
+const tot = sectors.length;
 const arc = TAU / tot;
 
-const friction = 0.991;
-
-let angVel = 0;
 let ang = 0;
+let spinning = false;
 
-let nextResult = null; // light / dark / null
-let targetAngle = null;
+let targetAngle = 0;
+let nextResult = null;
 
 // teclas
 document.addEventListener("keydown", (e) => {
 
   if (e.key.toLowerCase() === "l") {
     nextResult = "light";
-    console.log("Siguiente giro forzado: LIGHT");
+    console.log("Siguiente giro: LIGHT");
   }
 
   if (e.key.toLowerCase() === "d") {
     nextResult = "dark";
-    console.log("Siguiente giro forzado: DARK");
+    console.log("Siguiente giro: DARK");
   }
 
 });
@@ -74,7 +71,7 @@ function rotate() {
     `rotate(${ang - PI / 2}rad)`;
 
   spinEl.textContent =
-    !angVel ? "SPIN" : sector.label;
+    spinning ? sector.label : "SPIN";
 
   spinEl.style.background = sector.color;
   spinEl.style.color = sector.text;
@@ -82,39 +79,32 @@ function rotate() {
 
 function frame() {
 
-  angVel *= friction;
+  if (spinning) {
 
-  if (angVel < 0.002) {
+    const diff = targetAngle - ang;
 
-    if (targetAngle !== null) {
+    if (Math.abs(diff) < 0.002) {
       ang = targetAngle;
-      targetAngle = null;
+      spinning = false;
+    } else {
+      ang += diff * 0.08;
     }
 
-    angVel = 0;
   }
 
-  ang += angVel;
-  ang %= TAU;
-
   rotate();
-}
-
-function engine() {
-
-  frame();
-  requestAnimationFrame(engine);
+  requestAnimationFrame(frame);
 }
 
 function init() {
 
   sectors.forEach(drawSector);
   rotate();
-  engine();
+  frame();
 
   spinEl.addEventListener("click", () => {
 
-    if (!angVel) {
+    if (!spinning) {
 
       let resultIndex;
 
@@ -130,14 +120,14 @@ function init() {
 
       targetAngle = finalAngle + extraSpins;
 
-      angVel = rand(0.25, 0.45);
+      spinning = true;
 
-      // vuelve a random
       nextResult = null;
 
     }
 
   });
+
 }
 
 init();
